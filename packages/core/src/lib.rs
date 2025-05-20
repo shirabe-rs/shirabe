@@ -1,4 +1,5 @@
 pub mod adapter;
+pub mod app;
 pub mod bot;
 pub mod command; // 添加 command 模块
 pub mod config;

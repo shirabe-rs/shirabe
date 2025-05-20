@@ -76,7 +76,7 @@ pub struct Guild {
     pub avatar: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct GuildMember {
     /// 用户对象
     pub user: Option<User>,
@@ -89,7 +89,7 @@ pub struct GuildMember {
     pub joined_at_ms: Option<i64>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct GuildRole {
     /// 角色 ID
     pub id: String,
