@@ -1,0 +1,8 @@
+[package]
+name = "cli"
+version = "0.1.0"
+edition = "2021"  # 更新 edition
+
+[dependencies]
+utils = { path = "../utils" } # 添加 utils 包作为依赖
+tracing = "0.1.41"

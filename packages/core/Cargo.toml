@@ -1,0 +1,21 @@
+[package]
+name = "shirabe-core"
+version = "0.1.0"
+edition = "2024"
+authors = ["hanasaki <hanasakayui2022@gmail.com>"]
+description = "A Satori Bot Framework Core For Rust"
+license = "MIT"
+repository = "https://github.com/shirabe-rs/shirabe"
+
+[dependencies]
+async-trait = "0.1.88"
+config = { version = "0.15.11", features = ["toml"] }
+futures-util = "0.3.31"
+reqwest = "0.12.15"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+tokio = { version = "1.45.0", features = ["sync", "macros", "net"] }
+tokio-tungstenite = "0.26.2"
+tracing = "0.1.41"
+url = { version = "2.5.4", features = ["serde"] }
