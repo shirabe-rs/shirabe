@@ -57,7 +57,6 @@ pub struct Author {
 }
 
 /// 表示一个会话，封装了事件上下文并提供了便捷的交互方法。
-#[derive(Debug)]
 pub struct Session {
     /// 当前会话的应用上下文。
     pub app: Arc<Context>,

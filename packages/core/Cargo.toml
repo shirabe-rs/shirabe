@@ -19,3 +19,4 @@ tokio = { version = "1.45.0", features = ["sync", "macros", "net"] }
 tokio-tungstenite = "0.26.2"
 tracing = "0.1.41"
 url = { version = "2.5.4", features = ["serde"] }
+uuid = { version = "1.16.0", features = ["v4"] }

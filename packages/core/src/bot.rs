@@ -6,7 +6,6 @@ use crate::types::*;
 use std::sync::Arc;
 
 /// Bot 结构体，代表一个机器人实例
-#[derive(Debug)]
 pub struct Bot {
     /// Bot所属的适配器实例
     pub adapter: Arc<dyn Adapter>,
@@ -43,7 +42,7 @@ impl Bot {
             adapter: adapter_instance,
             config: Arc::new(config),
             ctx,
-            platform: platform,
+            platform,
             self_id: String::new(),
             state: LoginStatus::Offline,
             user: User::default(),
