@@ -237,7 +237,7 @@ pub struct WSClientConfig<C> {
     retry_lazy: u64,
     retry_times: u64,
     retry_interval: u64,
-    extend: Option<C>,
+    _extend: Option<C>,
 }
 
 #[async_trait]
