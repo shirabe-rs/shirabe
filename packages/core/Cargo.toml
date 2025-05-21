@@ -4,17 +4,7 @@ version = "0.1.0"
 edition = "2024"
 authors = ["hanasaki <hanasakayui2022@gmail.com>"]
 description = "A Satori Bot Framework Core For Rust"
-keywords = [
-    "shirabe",
-    "satori",
-    "bot",
-    "chatbot",
-    "framework",
-    "async",
-    "websocket",
-    "plugin",
-    "event",
-]
+keywords = ["shirabe", "chatbot", "framework", "async", "plugin"]
 categories = [
     "api-bindings",
     "asynchronous",
