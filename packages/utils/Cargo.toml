@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 authors = ["hanasaki <hanasakayui2022@gmail.com>"]
 description = "Utilities for the Shirabe Framework"
+keywords = ["shirabe", "bot", "utils"]
+categories = ["logging", "development-tools"]
 license = "MIT"
 repository = "https://github.com/shirabe-rs/shirabe"
 
