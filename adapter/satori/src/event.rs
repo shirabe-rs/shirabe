@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
-pub enum ShirabeEvent {
+pub enum SatoriEvent {
     // 消息事件
     #[serde(rename = "message-created")]
     MessageCreated(EventPayload),
@@ -68,61 +68,61 @@ pub enum ShirabeEvent {
     Unknown,
 }
 
-impl ShirabeEvent {
+impl SatoriEvent {
     pub fn event_type_str(&self) -> &'static str {
         match self {
-            ShirabeEvent::MessageCreated(_) => "message-created",
-            ShirabeEvent::MessageUpdated(_) => "message-updated",
-            ShirabeEvent::MessageDeleted(_) => "message-deleted",
-            ShirabeEvent::GuildAdded(_) => "guild-added",
-            ShirabeEvent::GuildUpdated(_) => "guild-updated",
-            ShirabeEvent::GuildRemoved(_) => "guild-removed",
-            ShirabeEvent::GuildRequest(_) => "guild-request",
-            ShirabeEvent::GuildMemberAdded(_) => "guild-member-added",
-            ShirabeEvent::GuildMemberUpdated(_) => "guild-member-updated",
-            ShirabeEvent::GuildMemberRemoved(_) => "guild-member-removed",
-            ShirabeEvent::GuildMemberRequest(_) => "guild-member-request",
-            ShirabeEvent::GuildRoleCreated(_) => "guild-role-created",
-            ShirabeEvent::GuildRoleUpdated(_) => "guild-role-updated",
-            ShirabeEvent::GuildRoleDeleted(_) => "guild-role-deleted",
-            ShirabeEvent::ReactionAdded(_) => "reaction-added",
-            ShirabeEvent::ReactionRemoved(_) => "reaction-removed",
-            ShirabeEvent::LoginAdded(_) => "login-added",
-            ShirabeEvent::LoginRemoved(_) => "login-removed",
-            ShirabeEvent::LoginUpdated(_) => "login-updated",
-            ShirabeEvent::FriendRequest(_) => "friend-request",
-            ShirabeEvent::InteractionButton(_) => "interaction/button",
-            ShirabeEvent::InteractionCommand(_) => "interaction/command",
-            ShirabeEvent::Unknown => "unknown",
+            SatoriEvent::MessageCreated(_) => "message-created",
+            SatoriEvent::MessageUpdated(_) => "message-updated",
+            SatoriEvent::MessageDeleted(_) => "message-deleted",
+            SatoriEvent::GuildAdded(_) => "guild-added",
+            SatoriEvent::GuildUpdated(_) => "guild-updated",
+            SatoriEvent::GuildRemoved(_) => "guild-removed",
+            SatoriEvent::GuildRequest(_) => "guild-request",
+            SatoriEvent::GuildMemberAdded(_) => "guild-member-added",
+            SatoriEvent::GuildMemberUpdated(_) => "guild-member-updated",
+            SatoriEvent::GuildMemberRemoved(_) => "guild-member-removed",
+            SatoriEvent::GuildMemberRequest(_) => "guild-member-request",
+            SatoriEvent::GuildRoleCreated(_) => "guild-role-created",
+            SatoriEvent::GuildRoleUpdated(_) => "guild-role-updated",
+            SatoriEvent::GuildRoleDeleted(_) => "guild-role-deleted",
+            SatoriEvent::ReactionAdded(_) => "reaction-added",
+            SatoriEvent::ReactionRemoved(_) => "reaction-removed",
+            SatoriEvent::LoginAdded(_) => "login-added",
+            SatoriEvent::LoginRemoved(_) => "login-removed",
+            SatoriEvent::LoginUpdated(_) => "login-updated",
+            SatoriEvent::FriendRequest(_) => "friend-request",
+            SatoriEvent::InteractionButton(_) => "interaction/button",
+            SatoriEvent::InteractionCommand(_) => "interaction/command",
+            SatoriEvent::Unknown => "unknown",
         }
     }
 
     /// 从任何包含它的 SatoriEvent 变体中获取通用 EventPayload 的辅助方法。
     pub fn common_payload(&self) -> Option<&EventPayload> {
         match self {
-            ShirabeEvent::MessageCreated(p)
-            | ShirabeEvent::MessageUpdated(p)
-            | ShirabeEvent::MessageDeleted(p)
-            | ShirabeEvent::GuildAdded(p)
-            | ShirabeEvent::GuildUpdated(p)
-            | ShirabeEvent::GuildRemoved(p)
-            | ShirabeEvent::GuildRequest(p)
-            | ShirabeEvent::GuildMemberAdded(p)
-            | ShirabeEvent::GuildMemberUpdated(p)
-            | ShirabeEvent::GuildMemberRemoved(p)
-            | ShirabeEvent::GuildMemberRequest(p)
-            | ShirabeEvent::GuildRoleCreated(p)
-            | ShirabeEvent::GuildRoleUpdated(p)
-            | ShirabeEvent::GuildRoleDeleted(p)
-            | ShirabeEvent::ReactionAdded(p)
-            | ShirabeEvent::ReactionRemoved(p)
-            | ShirabeEvent::LoginAdded(p)
-            | ShirabeEvent::LoginRemoved(p)
-            | ShirabeEvent::LoginUpdated(p)
-            | ShirabeEvent::FriendRequest(p)
-            | ShirabeEvent::InteractionButton(p)
-            | ShirabeEvent::InteractionCommand(p) => Some(p),
-            ShirabeEvent::Unknown => None,
+            SatoriEvent::MessageCreated(p)
+            | SatoriEvent::MessageUpdated(p)
+            | SatoriEvent::MessageDeleted(p)
+            | SatoriEvent::GuildAdded(p)
+            | SatoriEvent::GuildUpdated(p)
+            | SatoriEvent::GuildRemoved(p)
+            | SatoriEvent::GuildRequest(p)
+            | SatoriEvent::GuildMemberAdded(p)
+            | SatoriEvent::GuildMemberUpdated(p)
+            | SatoriEvent::GuildMemberRemoved(p)
+            | SatoriEvent::GuildMemberRequest(p)
+            | SatoriEvent::GuildRoleCreated(p)
+            | SatoriEvent::GuildRoleUpdated(p)
+            | SatoriEvent::GuildRoleDeleted(p)
+            | SatoriEvent::ReactionAdded(p)
+            | SatoriEvent::ReactionRemoved(p)
+            | SatoriEvent::LoginAdded(p)
+            | SatoriEvent::LoginRemoved(p)
+            | SatoriEvent::LoginUpdated(p)
+            | SatoriEvent::FriendRequest(p)
+            | SatoriEvent::InteractionButton(p)
+            | SatoriEvent::InteractionCommand(p) => Some(p),
+            SatoriEvent::Unknown => None,
         }
     }
 }

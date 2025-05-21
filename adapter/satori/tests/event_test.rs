@@ -5,7 +5,7 @@ mod test {
     #[test]
     /// 测试 EventData 的 JSON 反序列化
     fn test_event_data_schema() {
-        use shirabe_core::connection::EventData;
+        use shirabe_adapter_satori::connection::EventData;
 
         let _: EventData = serde_json::from_value(json!({
             "type": "message-created", // 事件类型

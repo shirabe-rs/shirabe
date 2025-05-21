@@ -1,4 +1,4 @@
-use crate::event::ShirabeEvent;
+use crate::event::SatoriEvent;
 use crate::types::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -51,7 +51,7 @@ pub struct MetaData {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EventData {
     #[serde(flatten)]
-    pub data: ShirabeEvent,
+    pub data: SatoriEvent,
 }
 
 #[derive(Debug, Deserialize)]
