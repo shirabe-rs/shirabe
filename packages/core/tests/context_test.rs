@@ -4,6 +4,7 @@ mod tests {
     use shirabe_core::bot::Bot;
     use shirabe_core::context::{Context, listener::ListenerAction, state::EventSystemSharedState};
     use shirabe_core::error::FrameworkResult;
+    use shirabe_core::message::MessageElement;
     use shirabe_core::session::{Session, SessionEvent};
     use shirabe_core::types::{
         Channel, ChannelType, Guild, GuildMember, GuildRole, Login, LoginStatus, Message, User,
@@ -15,7 +16,7 @@ mod tests {
     use std::sync::{Arc, Mutex, RwLock};
     use uuid::Uuid;
 
-    // --- Mock Adapter 实例 ---
+    // --- Mock Adapter ---
     #[derive(Debug)]
     struct MockAdapter {
         name: String,
@@ -144,15 +145,15 @@ mod tests {
         async fn send_message(
             &self,
             _channel_id: &str,
-            _content: &str,
+            _elements: &[MessageElement],
         ) -> FrameworkResult<Vec<String>> {
             Ok(vec!["mock_sent_message_id".to_string()])
         }
         async fn send_private_message(
             &self,
             _user_id: &str,
-            _content: &str,
             _guild_id: &str,
+            _elements: &[MessageElement],
         ) -> FrameworkResult<Vec<String>> {
             Ok(vec![])
         }
@@ -164,6 +165,9 @@ mod tests {
             Ok(Message {
                 id: message_id.to_string(),
                 content: "mock content".to_string(),
+                elements: vec![MessageElement::Text {
+                    text: "mock content".to_string(),
+                }],
                 channel: None,
                 guild: None,
                 member: None,
@@ -184,7 +188,7 @@ mod tests {
             &self,
             _channel_id: &str,
             _message_id: &str,
-            _content: &str,
+            _elements: &[MessageElement],
         ) -> FrameworkResult<()> {
             Ok(())
         }
@@ -348,6 +352,7 @@ mod tests {
             message: Message {
                 id: Uuid::new_v4().to_string(),
                 content: "test message".to_string(),
+                elements: vec![],
                 channel: Some(Channel {
                     id: channel_id.to_string(),
                     ty: channel_type,

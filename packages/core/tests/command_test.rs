@@ -8,10 +8,11 @@ mod tests {
     use shirabe_core::context::filter::ContextFilter;
     use shirabe_core::context::state::EventSystemSharedState;
     use shirabe_core::error::{FrameworkError, FrameworkResult};
+    use shirabe_core::message::MessageElement;
     use shirabe_core::session::{Session, SessionEvent};
     use shirabe_core::types::{
         Channel, ChannelType, Guild, GuildMember, GuildRole, Login, LoginStatus,
-        Message as SatoriMessage, User,
+        Message as FrameworkMessage, User,
     };
     use std::collections::HashMap;
     use std::sync::{Arc, Mutex, RwLock};
@@ -22,7 +23,8 @@ mod tests {
         guild_id: &str,
         channel_id: &str,
         is_direct: bool,
-        content: &str,
+        message_text_content: &str,
+        message_elements: Vec<MessageElement>,
     ) -> Arc<Session> {
         let shared_state = Arc::new(RwLock::new(EventSystemSharedState::default()));
         let app_context = Arc::new(Context::new_root(shared_state));
@@ -122,7 +124,7 @@ mod tests {
             async fn send_message(
                 &self,
                 _channel_id: &str,
-                _content: &str,
+                _elements: &[MessageElement],
             ) -> FrameworkResult<Vec<String>> {
                 Ok(vec![])
             }
@@ -130,17 +132,22 @@ mod tests {
                 &self,
                 _: &str,
                 _: &str,
-                _: &str,
+                _: &[MessageElement],
             ) -> FrameworkResult<Vec<String>> {
                 unimplemented!()
             }
-            async fn get_message(&self, _: &str, _: &str) -> FrameworkResult<SatoriMessage> {
+            async fn get_message(&self, _: &str, _: &str) -> FrameworkResult<FrameworkMessage> {
                 unimplemented!()
             }
             async fn delete_message(&self, _: &str, _: &str) -> FrameworkResult<()> {
                 unimplemented!()
             }
-            async fn update_message(&self, _: &str, _: &str, _: &str) -> FrameworkResult<()> {
+            async fn update_message(
+                &self,
+                _: &str,
+                _: &str,
+                _: &[MessageElement],
+            ) -> FrameworkResult<()> {
                 unimplemented!()
             }
             async fn get_message_list(
@@ -148,7 +155,7 @@ mod tests {
                 _: &str,
                 _: Option<&str>,
                 _: Option<&str>,
-            ) -> FrameworkResult<Vec<SatoriMessage>> {
+            ) -> FrameworkResult<Vec<FrameworkMessage>> {
                 unimplemented!()
             }
             async fn get_user(&self, _: &str) -> FrameworkResult<User> {
@@ -255,10 +262,10 @@ mod tests {
                 features: vec![],
             },
             member: Default::default(), // GuildMember
-            message: SatoriMessage {
-                // SatoriMessage
+            message: FrameworkMessage {
                 id: "test_msg_id".to_string(),
-                content: content.to_string(),
+                content: message_text_content.to_string(),
+                elements: message_elements,
                 channel: Some(Channel {
                     id: channel_id.to_string(),
                     ty: if is_direct {
@@ -357,6 +364,7 @@ mod tests {
             "channel1",
             false,
             "testcmd arg1",
+            vec![],
         );
         let prefixes = ["/", "!"];
         let executed = registry
@@ -369,8 +377,15 @@ mod tests {
     #[tokio::test]
     async fn test_parse_and_execute_only_prefix() {
         let registry = CommandRegistry::new();
-        let session =
-            create_test_session("test_platform", "user1", "guild1", "channel1", false, "/");
+        let session = create_test_session(
+            "test_platform",
+            "user1",
+            "guild1",
+            "channel1",
+            false,
+            "/",
+            vec![],
+        );
         let prefixes = ["/", "!"];
         let executed = registry
             .parse_and_execute(session, "/", &prefixes)
@@ -389,6 +404,7 @@ mod tests {
             "channel1",
             false,
             "/unknown",
+            vec![],
         );
         let prefixes = ["/", "!"];
         let executed = registry
@@ -424,6 +440,7 @@ mod tests {
             "channel1",
             false,
             "/ping",
+            vec![],
         );
         let prefixes = ["/"];
         let executed = registry
@@ -461,6 +478,7 @@ mod tests {
             "channel1",
             false,
             "!echo hello world",
+            vec![],
         );
         let prefixes = ["!"];
         let executed = registry
@@ -501,6 +519,7 @@ mod tests {
             "channel1",
             false,
             "/greet --name Alice --loud",
+            vec![],
         );
         let prefixes = ["/"];
         let executed = registry
@@ -540,6 +559,7 @@ mod tests {
             "channel1",
             false,
             "/shortgreet -v -x arg1 --mode test -abc",
+            vec![],
         );
         let prefixes = ["/"];
         let executed = registry
@@ -587,6 +607,7 @@ mod tests {
             "channel1",
             false,
             "/mix arg1 --opt1 val1 arg2 --flag -s arg3",
+            vec![],
         );
         let prefixes = ["/"];
         let executed = registry
@@ -648,6 +669,7 @@ mod tests {
             "channel1",
             false,
             "/builtcmd",
+            vec![],
         );
         let prefixes = ["/"];
         let executed = registry_guard
@@ -709,6 +731,7 @@ mod tests {
             "channel1",
             false,
             "/filteredcmd",
+            vec![],
         );
         let prefixes = ["/"];
         let executed = registry
@@ -727,6 +750,7 @@ mod tests {
             "channel1",
             false,
             "/filteredcmd",
+            vec![],
         );
         let executed = registry
             .parse_and_execute(session_no_match_user, "/filteredcmd", &prefixes)
@@ -742,6 +766,7 @@ mod tests {
             "channel1",
             false,
             "/filteredcmd",
+            vec![],
         );
         let executed = registry
             .parse_and_execute(session_no_match_platform, "/filteredcmd", &prefixes)
