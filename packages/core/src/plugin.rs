@@ -1,6 +1,5 @@
-use crate::bot::Bot;
+use crate::context::Context;
 use crate::error::FrameworkResult;
-use crate::session::Session;
 use async_trait::async_trait;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -25,11 +24,15 @@ pub trait Plugin: Send + Sync + Debug {
     /// # 返回
     ///
     /// 如果处理成功，返回 `Ok(())`，否则返回一个错误。
-    async fn apply(&self, session: Arc<Session>) -> FrameworkResult<()>;
+    async fn apply(&self, ctx: Arc<Context>) -> FrameworkResult<()>;
 
-    // 可选：插件加载时调用的方法，用于一次性设置。
-    async fn on_load(&self, bot: Arc<Bot>) -> FrameworkResult<()>;
+    // 插件加载时调用的方法，用于一次性设置。
+    async fn on_load(&self) -> FrameworkResult<()> {
+        Ok(())
+    }
 
-    // 可选：机器人关闭时调用的方法，用于清理工作。
-    // async fn on_unload(&self, bot: Arc<Bot>) -> FrameworkResult<()>;
+    // 机器人关闭时调用的方法，用于清理工作。
+    async fn on_unload(&self) -> FrameworkResult<()> {
+        Ok(())
+    }
 }
