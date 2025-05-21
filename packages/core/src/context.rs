@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex, RwLock}; // Mutex 用于回调的内部可变性
 use uuid::Uuid; // Mutex 用于回调的内部可变性
 
 use crate::bot::Bot;
+use crate::command::CommandBuilder;
 use crate::context::{
     filter::ContextFilter,
     listener::{ListenerAction, ListenerHandle, ListenerId, RegisteredListener},
@@ -77,6 +78,29 @@ impl Context {
         }
     }
     // --- 上下文派生方法结束 ---
+
+    /// 开始定义一个新指令。
+    ///
+    /// 指令将自动关联当前上下文的过滤器。
+    ///
+    /// # 例如
+    ///
+    /// ```ignore
+    /// ctx.command("ping")
+    ///    .description("Replies with pong")
+    ///    .action(|session, _args| Box::pin(async move {
+    ///        session.bot.send_message(&session.channel_id, "pong").await?;
+    ///        Ok(())
+    ///    }))
+    ///    .register()?;
+    /// ```
+    pub fn command(&self, name: &str) -> CommandBuilder {
+        let registry_arc = {
+            let state_guard = self.shared_state.read().unwrap();
+            Arc::clone(&state_guard.command_registry)
+        };
+        CommandBuilder::new(name.to_string(), self.current_filter.clone(), registry_arc)
+    }
 
     fn register_listener_internal(
         &self,

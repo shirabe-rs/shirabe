@@ -1,12 +1,12 @@
+use crate::context::filter::ContextFilter;
 use crate::error::FrameworkResult;
 use crate::session::Session;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
-// TODO:完善命令系统
 /// 解析后的命令参数和选项。
 #[derive(Debug, Clone, Default)]
 pub struct ParsedArgs {
@@ -28,8 +28,6 @@ pub type CommandAction = Box<
 >;
 
 /// 代表一个机器人指令。
-// Command 没有派生 Debug，因为 CommandAction 不是 Debug。
-// 如果需要，可以手动实现 Debug，并排除 action 字段。
 pub struct Command {
     /// 指令的主要名称。
     pub name: String,
@@ -37,6 +35,8 @@ pub struct Command {
     pub aliases: Vec<String>,
     /// 指令功能的简要描述。
     pub description: Option<String>,
+    /// 指令注册时关联的上下文过滤器。
+    pub filter: ContextFilter,
     /// 指令执行时的异步动作。
     pub action: CommandAction,
     // TODO: 为帮助信息生成和验证添加参数和选项定义的字段
@@ -50,6 +50,7 @@ impl Debug for Command {
             .field("name", &self.name)
             .field("aliases", &self.aliases)
             .field("description", &self.description)
+            .field("filter", &self.filter)
             .field("action", &"Box<dyn Fn(...)>") // 不打印闭包本身
             .finish()
     }
@@ -59,7 +60,7 @@ impl Debug for Command {
 #[derive(Default, Debug)]
 pub struct CommandRegistry {
     /// 存储指令，将指令名称/别名映射到指令定义。
-    commands: HashMap<String, Arc<Command>>,
+    pub commands: HashMap<String, Arc<Command>>,
 }
 
 impl CommandRegistry {
@@ -100,6 +101,7 @@ impl CommandRegistry {
     ///
     /// * `session`: 当前会话，提供上下文和机器人访问。
     /// * `message_content`: 消息的原始文本内容。
+    /// * `prefixes`: 命令前缀集合。
     ///
     /// # 返回
     ///
@@ -110,64 +112,163 @@ impl CommandRegistry {
         &self,
         session: Arc<Session>,
         message_content: &str,
+        // TODO: 从配置中获取前缀
+        prefixes: &[&str], // 允许传入前缀
     ) -> FrameworkResult<bool> {
-        //     let prefixes = &session.bot().config.prefix;
-        //     let mut potential_command_text: Option<&str> = None;
+        let mut potential_command_text: Option<&str> = None;
 
-        //     for prefix in prefixes {
-        //         if message_content.starts_with(prefix) {
-        //             potential_command_text =
-        //                 Some(message_content.trim_start_matches(prefix).trim_start());
-        //             break;
-        //         }
-        //     }
+        for prefix in prefixes {
+            if message_content.starts_with(prefix) {
+                potential_command_text =
+                    Some(message_content.trim_start_matches(prefix).trim_start());
+                break;
+            }
+        }
 
-        //     if potential_command_text.is_none() {
-        //         return Ok(false); // 不是指令
-        //     }
+        if potential_command_text.is_none() {
+            return Ok(false); // 不是指令 (没有匹配的前缀)
+        }
 
-        //     let text = potential_command_text.unwrap();
-        //     if text.is_empty() {
-        //         return Ok(false); // 只有前缀，没有指令名称
-        //     }
+        let text = potential_command_text.unwrap();
+        if text.is_empty() {
+            return Ok(false); // 只有前缀，没有指令名称
+        }
 
-        //     let parts: Vec<&str> = text.split_whitespace().collect();
-        //     let command_name = parts[0];
+        let parts: Vec<&str> = text.split_whitespace().collect();
+        let command_name = parts[0];
 
-        //     if let Some(command_arc) = self.commands.get(command_name) {
-        //         tracing::debug!("正在执行指令: {}", command_name);
+        if let Some(command_arc) = self.commands.get(command_name) {
+            // 检查指令自身注册时绑定的过滤器
+            if !command_arc.filter.matches_session(&session) {
+                tracing::trace!(
+                    "指令 {} 找到，但其上下文过滤器不匹配当前会话。",
+                    command_name
+                );
+                return Ok(false); // 指令的上下文过滤器不匹配
+            }
 
-        //         let mut parsed_args = ParsedArgs::default();
-        //         // let remaining_parts = &parts[1..]; // 这行是旧的，下面修复了索引
-        //         let mut i = 1; // 从指令名称后的第一个部分开始
-        //         while i < parts.len() {
-        //             let part = parts[i];
-        //             if part.starts_with("--") {
-        //                 let option_name = part.trim_start_matches("--").to_string();
-        //                 if i + 1 < parts.len() && !parts[i + 1].starts_with("--") {
-        //                     // 带值的选项
-        //                     parsed_args
-        //                         .options
-        //                         .insert(option_name, parts[i + 1].to_string());
-        //                     i += 1; // 消耗选项值部分
-        //                 } else {
-        //                     // 标志选项（无值）或最后一个选项
-        //                     parsed_args.options.insert(option_name, String::new()); // 或其他占位符
-        //                 }
-        //             } else {
-        //                 // 参数
-        //                 parsed_args.arguments.push(part.to_string());
-        //             }
-        //             i += 1;
-        //         }
+            tracing::debug!("正在执行指令: {}", command_name);
 
-        //         // 执行指令的动作
-        //         (command_arc.action)(session, parsed_args).await?;
-        //         Ok(true) // 指令找到并尝试执行
-        //     } else {
-        //         tracing::trace!("未知指令: {}", command_name);
-        //         Ok(false) // 未知指令
-        //     }
-        Ok(false)
+            let mut parsed_args = ParsedArgs::default();
+            let mut i = 1; // 从指令名称后的第一个部分开始
+            while i < parts.len() {
+                let part = parts[i];
+                if part.starts_with("--") {
+                    let option_name = part.trim_start_matches("--").to_string();
+                    if i + 1 < parts.len() {
+                        let next_part = parts[i + 1];
+                        // 值不能以 '-' 开头 (除非它是负数等特定情况，但这里简化)
+                        if !next_part.starts_with('-') && !next_part.is_empty() {
+                            // 主要修改在这里
+                            parsed_args
+                                .options
+                                .insert(option_name, next_part.to_string());
+                            i += 1; // 消耗选项值部分
+                        } else {
+                            // 下一个 token 是另一个选项，或没有值，当前长选项是标志
+                            parsed_args.options.insert(option_name, String::new());
+                        }
+                    } else {
+                        // 没有更多 token 了，当前长选项是标志
+                        parsed_args.options.insert(option_name, String::new());
+                    }
+                } else if part.starts_with('-') && part.len() > 1 && !part.starts_with("--") {
+                    // 短选项逻辑
+                    for (idx, char_val) in part.char_indices() {
+                        if idx == 0 {
+                            continue;
+                        }
+                        parsed_args
+                            .options
+                            .insert(char_val.to_string(), String::new());
+                    }
+                } else {
+                    // 参数
+                    parsed_args.arguments.push(part.to_string());
+                }
+                i += 1;
+            }
+
+            // 执行指令的动作
+            (command_arc.action)(session, parsed_args).await?;
+            Ok(true) // 指令找到并尝试执行
+        } else {
+            tracing::trace!("未知指令: {}", command_name);
+            Ok(false) // 未知指令
+        }
+    }
+}
+
+/// 用于链式构建和注册指令的构建器。
+pub struct CommandBuilder {
+    name: String,
+    aliases: Vec<String>,
+    description: Option<String>,
+    filter: ContextFilter, // 从调用 command() 的上下文中捕获
+    action: Option<CommandAction>,
+    registry: Arc<RwLock<CommandRegistry>>, // 指向共享的指令注册表
+}
+
+impl CommandBuilder {
+    /// 创建一个新的 CommandBuilder。
+    /// 通常由 `Context::command()` 调用。
+    pub fn new(
+        name: String,
+        filter: ContextFilter,
+        registry: Arc<RwLock<CommandRegistry>>,
+    ) -> Self {
+        CommandBuilder {
+            name,
+            aliases: Vec::new(),
+            description: None,
+            filter,
+            action: None,
+            registry,
+        }
+    }
+
+    /// 为指令添加一个别名。
+    pub fn alias(mut self, alias: &str) -> Self {
+        self.aliases.push(alias.to_string());
+        self
+    }
+
+    /// 为指令设置描述。
+    pub fn description(mut self, description: &str) -> Self {
+        self.description = Some(description.to_string());
+        self
+    }
+
+    /// 设置指令的执行动作。
+    pub fn action<F, Fut>(mut self, f: F) -> Self
+    where
+        F: Fn(Arc<Session>, ParsedArgs) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = FrameworkResult<()>> + Send + Sync + 'static,
+    {
+        self.action = Some(Box::new(move |session, args| Box::pin(f(session, args))));
+        self
+    }
+
+    /// 构建并注册指令。
+    pub fn register(self) -> FrameworkResult<()> {
+        let action = self.action.ok_or_else(|| {
+            crate::error::FrameworkError::Command(format!("指令 '{}' 没有定义 action", self.name))
+        })?;
+
+        let command = Command {
+            name: self.name.clone(),
+            aliases: self.aliases,
+            description: self.description,
+            filter: self.filter,
+            action,
+        };
+
+        let mut registry_guard = self.registry.write().map_err(|_| {
+            crate::error::FrameworkError::Internal("无法获取 CommandRegistry 的写锁".to_string())
+        })?;
+
+        registry_guard.register(command)?;
+        tracing::info!("指令 '{}' 已注册", self.name);
+        Ok(())
     }
 }

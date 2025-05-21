@@ -1,15 +1,18 @@
+use crate::command::CommandRegistry;
 use std::collections::HashMap;
-use std::sync::Arc; // Mutex 用于回调的内部可变性
+use std::sync::{Arc, RwLock};
 
 use super::listener::{ListenerId, RegisteredListener};
 
 // 共享状态，存储所有事件的监听器
 #[derive(Default)]
 pub struct EventSystemSharedState {
-    // 事件名 -> 该事件的所有监听器列表
+    /// 事件名 -> 该事件的所有监听器列表
     pub listeners_by_event: HashMap<String, Vec<Arc<RegisteredListener>>>,
-    // 监听器ID -> 监听器，用于通过ID快速移除
+    /// 监听器ID -> 监听器，用于通过ID快速移除
     pub listeners_by_id: HashMap<ListenerId, Arc<RegisteredListener>>,
+    /// 存储指令
+    pub command_registry: Arc<RwLock<CommandRegistry>>,
 }
 
 impl EventSystemSharedState {

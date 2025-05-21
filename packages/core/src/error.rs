@@ -18,6 +18,8 @@ pub enum FrameworkError {
     EventParsing(String),
     #[error("鉴权失败: {0}")]
     AuthFailed(String),
+    #[error("指令错误: {0}")]
+    Command(String),
     #[error("插件错误: {0}")]
     Plugin(String),
     #[error("IO 错误: {0}")]
