@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::message::MessageElement;
+
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
 pub struct User {
     /// 用户 ID
@@ -20,7 +22,9 @@ pub struct User {
 pub struct Message {
     /// 消息ID
     pub id: String,
-    /// 消息内容
+    /// 消息元素
+    pub elements: Vec<MessageElement>,
+    /// 消息的纯文本内容
     pub content: String,
     /// 消息所在的频道对象
     pub channel: Option<Channel>,

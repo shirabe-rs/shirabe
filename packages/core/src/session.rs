@@ -3,6 +3,7 @@ use serde::Deserialize;
 use crate::bot::Bot;
 use crate::context::Context;
 use crate::error::FrameworkResult;
+use crate::message::MessageElement;
 use crate::types::{Channel, ChannelType, Guild, GuildMember, GuildRole, Login, Message, User};
 use std::sync::Arc;
 
@@ -72,7 +73,7 @@ pub struct Session {
     pub channel_id: String,
     pub channel_name: String,
     pub content: String,
-    // pub elements: Vec<MessageElement>,
+    pub elements: Vec<MessageElement>,
     pub guild_id: String,
     pub guild_name: String,
     pub id: String,
@@ -117,7 +118,7 @@ impl Session {
         let channel_id = event.channel.id.clone();
         let channel_name = event.channel.name.clone();
         let content = event.message.content.clone();
-        // let elements = event.message.elements.clone();
+        let elements = event.message.elements.clone();
         let guild_id = event.guild.id.clone();
         let guild_name = event.guild.name.clone();
         let id = event.id.to_string();
@@ -140,7 +141,7 @@ impl Session {
             channel_id,
             channel_name,
             content,
-            // elements,
+            elements,
             guild_id,
             guild_name,
             id,
@@ -156,7 +157,7 @@ impl Session {
     }
 
     /// 在当前上下文发送消息
-    pub async fn send(&self, message: String) -> FrameworkResult<Vec<String>> {
-        self.bot.send_message(&self.channel_id, &message).await
+    pub async fn send(&self, elements: &[MessageElement]) -> FrameworkResult<Vec<String>> {
+        self.bot.send_message(&self.channel_id, elements).await
     }
 }

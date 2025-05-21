@@ -1,6 +1,7 @@
 use crate::adapter::Adapter;
 use crate::context::Context;
 use crate::error::FrameworkResult;
+use crate::message::MessageElement;
 use crate::types::*;
 use std::sync::Arc;
 
@@ -238,20 +239,20 @@ impl Bot {
     pub async fn send_message(
         &self,
         channel_id: &str,
-        content: &str,
+        elements: &[MessageElement],
     ) -> FrameworkResult<Vec<String>> {
-        self.adapter.send_message(channel_id, content).await
+        self.adapter.send_message(channel_id, elements).await
     }
 
     /// 向特定用户发送私信
     pub async fn send_private_message(
         &self,
         user_id: &str,
-        content: &str,
         guild_id: &str,
+        elements: &[MessageElement],
     ) -> FrameworkResult<Vec<String>> {
         self.adapter
-            .send_private_message(user_id, content, guild_id)
+            .send_private_message(user_id, guild_id, elements)
             .await
     }
 
@@ -274,10 +275,10 @@ impl Bot {
         &self,
         channel_id: &str,
         message_id: &str,
-        content: &str,
+        elements: &[MessageElement],
     ) -> FrameworkResult<()> {
         self.adapter
-            .update_message(channel_id, message_id, content)
+            .update_message(channel_id, message_id, elements)
             .await
     }
 
@@ -294,9 +295,15 @@ impl Bot {
     }
 
     /// 向多个频道广播消息
-    pub async fn broadcast(&self, content: &str, channels: Vec<String>) -> FrameworkResult<()> {
+    pub async fn broadcast(
+        &self,
+        channels: Vec<String>,
+        elements: &[MessageElement],
+    ) -> FrameworkResult<()> {
         for channel in channels {
-            self.adapter.send_message(channel.as_str(), content).await?;
+            self.adapter
+                .send_message(channel.as_str(), elements)
+                .await?;
         }
         Ok(())
     }

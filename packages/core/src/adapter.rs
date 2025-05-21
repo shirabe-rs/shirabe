@@ -2,6 +2,7 @@ use crate::{
     bot::Bot,
     context::Context,
     error::FrameworkResult,
+    message::MessageElement,
     types::{Channel, Guild, GuildMember, GuildRole, Login, LoginStatus, Message, User},
 };
 use async_trait::async_trait;
@@ -126,14 +127,19 @@ pub trait Adapter: Send + Sync + std::fmt::Debug {
     async fn delete_guild_role(&self, guild_id: &str, role_id: &str) -> FrameworkResult<()>;
 
     /// 向特定频道发送消息
-    async fn send_message(&self, channel_id: &str, content: &str) -> FrameworkResult<Vec<String>>;
+    /// 返回消息ID列表
+    async fn send_message(
+        &self,
+        channel_id: &str,
+        elements: &[MessageElement],
+    ) -> FrameworkResult<Vec<String>>;
 
     /// 向特定用户发送私信
     async fn send_private_message(
         &self,
         user_id: &str,
-        content: &str,
         guild_id: &str,
+        elements: &[MessageElement],
     ) -> FrameworkResult<Vec<String>>;
 
     /// 获取特定消息
@@ -147,7 +153,7 @@ pub trait Adapter: Send + Sync + std::fmt::Debug {
         &self,
         channel_id: &str,
         message_id: &str,
-        content: &str,
+        elements: &[MessageElement],
     ) -> FrameworkResult<()>;
 
     /// 获取频道消息列表
