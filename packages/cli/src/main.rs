@@ -1,4 +1,4 @@
-use utils::log::init_logger; // 导入日志初始化函数
+use shirabe_utils::log::init_logger; // 导入日志初始化函数
 
 fn main() {
     init_logger(); // 初始化日志系统

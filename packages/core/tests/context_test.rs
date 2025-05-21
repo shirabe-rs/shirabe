@@ -2,7 +2,6 @@
 mod tests {
     use shirabe_core::adapter::Adapter;
     use shirabe_core::bot::Bot;
-    use shirabe_core::config::{BasicConfig, NetworkConfig};
     use shirabe_core::context::{Context, listener::ListenerAction, state::EventSystemSharedState};
     use shirabe_core::error::FrameworkResult;
     use shirabe_core::session::{Session, SessionEvent};
@@ -403,24 +402,8 @@ mod tests {
             self_id: event.self_id.clone(),
         });
 
-        let network_config = NetworkConfig {
-            host: "localhost".to_string(),
-            port: 8080,
-            path: "/".to_string(),
-            version: "1".to_string(),
-        };
-        let basic_config = BasicConfig {
-            network: network_config,
-            log_level: "debug".to_string(),
-            ignore_self_message: true,
-            prefix: vec!["!".to_string()],
-        };
-
-        let mut bot_instance = Bot::new(
-            Arc::new(bot_platform_ctx),
-            basic_config,
-            mock_adapter as Arc<dyn Adapter>,
-        );
+        let mut bot_instance =
+            Bot::new(Arc::new(bot_platform_ctx), mock_adapter as Arc<dyn Adapter>);
         bot_instance.self_id = event.self_id.clone();
         bot_instance.platform = event.platform.clone();
         bot_instance.user = User {
@@ -438,7 +421,8 @@ mod tests {
     fn test_new_root_context() {
         let shared_state = create_shared_state();
         let ctx = Context::new_root(Arc::clone(&shared_state));
-        assert!(ctx.bots.is_empty());
+        let bots_guard = ctx.bots.lock().unwrap();
+        assert!(bots_guard.is_empty());
         assert!(ctx.current_filter.user_ids.is_none());
         assert!(ctx.current_filter.guild_ids.is_none());
         assert!(ctx.current_filter.platforms.is_none());
@@ -501,8 +485,8 @@ mod tests {
             *count += 1;
         });
 
-        ctx.emit(None, "test_event", &[]);
-        ctx.emit(None, "test_event", &[]);
+        ctx.emit("test_event", None, &[]);
+        ctx.emit("test_event", None, &[]);
 
         assert_eq!(*call_count.lock().unwrap(), 2);
 
@@ -523,8 +507,8 @@ mod tests {
             *count += 1;
         });
 
-        ctx.emit(None, "test_event_once", &[]);
-        ctx.emit(None, "test_event_once", &[]);
+        ctx.emit("test_event_once", None, &[]);
+        ctx.emit("test_event_once", None, &[]);
 
         assert_eq!(*call_count.lock().unwrap(), 1);
 
@@ -558,7 +542,7 @@ mod tests {
             *called = true;
         });
 
-        let result = ctx.emit(None, "test_event_bail", &[]);
+        let result = ctx.emit("test_event_bail", None, &[]);
 
         assert_eq!(*bail_called.lock().unwrap(), true);
         assert_eq!(*subsequent_called.lock().unwrap(), false);
@@ -593,12 +577,12 @@ mod tests {
             *called += 1;
         });
 
-        let result = ctx.emit(None, "test_event_nobail", &[]);
+        let result = ctx.emit("test_event_nobail", None, &[]);
         assert_eq!(*bail_called_count.lock().unwrap(), 1);
         assert_eq!(*subsequent_called_count.lock().unwrap(), 1);
         assert!(result.is_none());
 
-        let result2 = ctx.emit(None, "test_event_nobail", &[]);
+        let result2 = ctx.emit("test_event_nobail", None, &[]);
         assert_eq!(*bail_called_count.lock().unwrap(), 2);
         assert_eq!(*subsequent_called_count.lock().unwrap(), 2);
         assert!(result2.is_none());
@@ -647,7 +631,7 @@ mod tests {
             bot_self_id_for_test,
         );
         let session1 = create_mock_session(Arc::clone(&app_ctx), event1);
-        app_ctx.emit(Some(&session1), "event_filtered", &[]);
+        app_ctx.emit("event_filtered", Some(&session1), &[]);
 
         assert!(
             *user_specific_called.lock().unwrap(),
@@ -680,7 +664,7 @@ mod tests {
             bot_self_id_for_test,
         );
         let session2 = create_mock_session(Arc::clone(&app_ctx), event2);
-        app_ctx.emit(Some(&session2), "event_filtered", &[]);
+        app_ctx.emit("event_filtered", Some(&session2), &[]);
 
         assert!(
             !*user_specific_called.lock().unwrap(),
@@ -718,7 +702,7 @@ mod tests {
             bot_self_id_for_test,
         );
         let session3 = create_mock_session(Arc::clone(&app_ctx), event3);
-        app_ctx.emit(Some(&session3), "event_filtered", &[]);
+        app_ctx.emit("event_filtered", Some(&session3), &[]);
 
         assert!(
             *private_called.lock().unwrap(),
@@ -753,7 +737,7 @@ mod tests {
                 *usnsc_clone.lock().unwrap() = true;
             });
 
-        app_ctx.emit(None, "event_no_session", &[]);
+        app_ctx.emit("event_no_session", None, &[]);
         assert!(
             *generic_called_no_session.lock().unwrap(),
             "Generic listener (no session filter) should be called for emit(None, ...)"
@@ -776,7 +760,7 @@ mod tests {
             *count += 1;
         });
 
-        ctx.emit(None, "event_handle_dispose", &[]);
+        ctx.emit("event_handle_dispose", None, &[]);
         assert_eq!(*call_count.lock().unwrap(), 1);
 
         {
@@ -793,7 +777,7 @@ mod tests {
 
         handle.dispose();
 
-        ctx.emit(None, "event_handle_dispose", &[]);
+        ctx.emit("event_handle_dispose", None, &[]);
         assert_eq!(*call_count.lock().unwrap(), 1);
 
         {
@@ -835,7 +819,7 @@ mod tests {
             *ofab_clone.lock().unwrap() = true;
         });
 
-        let result = ctx.emit(None, "bail_interaction_event", &[]);
+        let result = ctx.emit("bail_interaction_event", None, &[]);
 
         assert!(result.is_some(), "Emit should return the bailed value");
         assert!(
@@ -877,7 +861,7 @@ mod tests {
         *once_fired_before_bail.lock().unwrap() = false;
         *bail_fired.lock().unwrap() = false;
 
-        let result2 = ctx.emit(None, "bail_interaction_event", &[]);
+        let result2 = ctx.emit("bail_interaction_event", None, &[]);
         assert!(result2.is_none(), "Emit should not bail this time");
         assert!(
             *once_fired_after_bail.lock().unwrap(),
