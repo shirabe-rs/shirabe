@@ -2,6 +2,10 @@
 name = "shirabe-utils"
 version = "0.1.0"
 edition = "2024"
+authors = ["hanasaki <hanasakayui2022@gmail.com>"]
+description = "Utilities for the Shirabe Framework"
+license = "MIT"
+repository = "https://github.com/shirabe-rs/shirabe"
 
 [dependencies]
 tracing = "0.1.41"
