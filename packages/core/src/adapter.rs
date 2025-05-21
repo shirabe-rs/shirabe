@@ -227,14 +227,18 @@ pub trait Adapter: Send + Sync + std::fmt::Debug {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct WSClientConfig {
+pub struct WSClientConfig<C> {
     retry_lazy: u64,
     retry_times: u64,
     retry_interval: u64,
+    extend: Option<C>,
 }
 
 #[async_trait]
-pub trait WSClient: Adapter {
+pub trait WSClient<C>: Adapter
+where
+    C: for<'de> Deserialize<'de> + Send,
+{
     /// 获取适配器的上下文
     fn ctx(&self) -> Context;
 
@@ -245,7 +249,7 @@ pub trait WSClient: Adapter {
     fn socket(&self) -> Option<WebSocketStream<MaybeTlsStream<TcpStream>>>;
 
     /// 获取适配器的配置
-    fn config(&self) -> WSClientConfig;
+    fn config(&self) -> WSClientConfig<C>;
 
     /// 根据Bot实例生成一个WebSocket对象
     async fn prepare(&self) -> FrameworkResult<(WebSocketStream<MaybeTlsStream<TcpStream>>, Url)>;
@@ -358,7 +362,7 @@ pub trait WSClient: Adapter {
                             self.get_name(),
                             e
                         );
-                        break; // Break from message loop to trigger reconnect logic
+                        break;
                     }
                 }
             }

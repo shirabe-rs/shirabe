@@ -1,16 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct NetworkConfig {
-    pub host: String,
-    pub port: u16,
-    pub path: String,
-    pub version: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
 pub struct BasicConfig {
-    pub network: NetworkConfig,
     pub log_level: String,
     pub ignore_self_message: bool,
     pub prefix: Vec<String>,

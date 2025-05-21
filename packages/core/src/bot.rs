@@ -1,5 +1,4 @@
 use crate::adapter::Adapter;
-use crate::config::BasicConfig;
 use crate::context::Context;
 use crate::error::FrameworkResult;
 use crate::types::*;
@@ -10,10 +9,10 @@ pub struct Bot {
     /// Bot所属的适配器实例
     pub adapter: Arc<dyn Adapter>,
     /// Bot配置
-    pub config: Arc<BasicConfig>,
+    // pub config: Arc<C>,
     /// Bot 所在的Context实例
-    pub ctx: Arc<Context>, // Changed to Arc<Context>
-    /// Bot在平台上的 ID
+    pub ctx: Arc<Context>,
+    /// Bot的所在平台名称
     pub platform: String,
     /// Bot在平台上的 ID
     pub self_id: String,
@@ -35,12 +34,11 @@ impl Bot {
     /// # Returns
     ///
     /// 返回一个新的 `Bot` 实例
-    pub fn new(ctx: Arc<Context>, config: BasicConfig, adapter_instance: Arc<dyn Adapter>) -> Self {
-        // Changed to Arc<Context>
+    pub fn new(ctx: Arc<Context>, adapter_instance: Arc<dyn Adapter>) -> Self {
         let platform = adapter_instance.get_name();
         Bot {
             adapter: adapter_instance,
-            config: Arc::new(config),
+            // config: Arc::new(config),
             ctx,
             platform,
             self_id: String::new(),

@@ -19,7 +19,7 @@ use crate::session::Session;
 #[derive(Clone)]
 pub struct Context {
     /// 当前应用的全部机器人实例
-    pub bots: Vec<Arc<Bot>>,
+    pub bots: Arc<Mutex<Vec<Arc<Bot>>>>,
     /// 当前上下文的过滤器设置
     pub current_filter: ContextFilter,
     /// 对共享状态的引用
@@ -29,7 +29,7 @@ pub struct Context {
 impl Context {
     pub fn new_root(shared_state: Arc<RwLock<EventSystemSharedState>>) -> Self {
         Context {
-            bots: Vec::new(),
+            bots: Arc::new(Mutex::new(Vec::new())),
             current_filter: ContextFilter::new(), // 根上下文的过滤器是空的
             shared_state,
         }
@@ -147,8 +147,8 @@ impl Context {
     /// 如果某个 bail 监听器熔断了，则返回其返回值
     pub fn emit(
         &self,
-        session_context: Option<&Session>,
         event_name: &str,
+        session_context: Option<&Session>,
         args: &[Box<dyn Any + Send + Sync>],
     ) -> Option<Box<dyn Any + Send + Sync>> {
         let state_read_guard = self.shared_state.read().unwrap(); // 获取读锁
